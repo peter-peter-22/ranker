@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+psycopg2-binary = "*"
+keras = "*"
+fastapi = "*"
+uvicorn = "*"
+pydantic = "*"
+numpy = "*"
+tensorflow = "*"
+python-dotenv = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
+
+[scripts]
+dev = "uvicorn src.app:app --port=8001 --reload"
+start = "uvicorn src.app:app --port=8001"
