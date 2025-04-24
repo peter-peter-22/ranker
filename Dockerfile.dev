@@ -12,9 +12,7 @@ COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
 # Install dependencies (without dev dependencies)
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=cache,target=/root/.cache/pypoetry \
-    poetry config virtualenvs.create false && \
+RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi --no-root --only main
 
 # Copy application code
