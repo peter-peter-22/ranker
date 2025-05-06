@@ -15,7 +15,7 @@ class PostToRankNormalized(NamedTuple):
     followed: float
     replied_by_followed: float
 
-def normalize_post(post:PostToRank):
+def transform_post(post:PostToRank):
     """
     Prepare a post to be used in the model by normalizing the values.
 
