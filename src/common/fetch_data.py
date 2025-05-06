@@ -71,21 +71,7 @@ def training_data_fetcher():
     # Get validation data
     async def validation_data():
         nonlocal pool, count
-        
-        # Calculate how much percent of the table is the training data
-        percent=validation_size/count*100
-
-        print(f"Fetching the {percent:.4f}% of {count} rows for validation.",flush=True)
-
-        # Create query to fetch 
-        query=get_query(f"select * from views tablesample bernoulli({percent}) repeatable(100)")
-
-        # Fetch rows
-        rows=await pool.fetch(query)
-        print(f"Fetched {len(rows)} rows for validation.",flush=True)
-
-        # Return formatted rows
-        return format_rows(rows)
+        return await post_subset(count,validation_size,pool)
 
     # Generator function to return shuffled batches of data.
     async def get_data():
@@ -125,10 +111,37 @@ def format_rows(rows:List):
         rows (List): A list of database rows.
 
     Returns:
-        posts (List[PostToRank]): A list of Post objects.
-        engagements (List[Engagements]): A list of Engagement objects.
+        posts (List[PostToRank]): A list of rankable posts.
+        engagements (List[Engagements]): A list of engagements.
     """
     # Format the rows
     posts=[PostToRank(*row[:10]) for row in rows]
     engagements=[Engagements(*row[10:]) for row in rows]
     return posts,engagements
+
+async def post_subset(total_count:int,target_count:int,pool:asyncpg.Pool):
+    """
+    Fetch a random subset of the engaged posts.
+
+    Args:
+        total_count (int): Total number of posts.
+        target_count (int): Number of posts to be fetched.
+        pool (asyncpg.Pool): Database connection pool.
+
+    Returns:
+        posts (List[PostToRank]): A list of rankable posts.
+        engagements (List[Engagements]): A list of engagements.
+    """
+    # Calculate how much percent of the table is the target
+    percent=target_count/total_count*100
+    print(f"Fetching the {percent:.4f}% of {total_count} rows.",flush=True)
+
+    # Create query to fetch 
+    query=get_query(f"select * from views tablesample bernoulli({percent}) repeatable(100)")
+
+    # Fetch rows
+    rows=await pool.fetch(query)
+    print(f"Fetched {len(rows)} rows.",flush=True)
+    
+    # Format and return rows
+    return format_rows(rows)

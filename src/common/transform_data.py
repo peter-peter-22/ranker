@@ -16,7 +16,7 @@ class PostToRankNormalized(NamedTuple):
     followed: float
     replied_by_followed: float
 
-def transform_post(post:PostToRank):
+def normalize_post(post:PostToRank):
     """
     Prepare a post to be used in the model by normalizing the values.
 
@@ -44,17 +44,28 @@ def transform_post(post:PostToRank):
         replied_by_followed=post.replied_by_followed,
     )
 
-def transform_data(posts:List[PostToRank],engagements:List[Engagements]):
+def transform_posts(posts:List[PostToRank]):
     """
-    Convert the training data to normalized tensors
+    Normalize posts and convert them to tensors.
 
     Args:
-        posts (List[PostToRank]): The training data.
-        engagements (List[Engagements]): The engagement history.
+        posts (List[PostToRank]): Posts to transform.
 
     Returns:
-        Tuple[torch.Tensor, torch.Tensor]: The normalized tensors.
+        torch.Tensor: Normalized post tensors.
     """
-    posts:torch.Tensor=torch.stack([torch.tensor(transform_post(row),dtype=torch.float32) for row in posts])#TODO use float16
+    posts:torch.Tensor=torch.stack([torch.tensor(normalize_post(row),dtype=torch.float32) for row in posts])#TODO use float16
+    return posts
+
+def transform_engagements(engagements:List[Engagements]):
+    """
+    Convert engagements to tensors.
+
+    Args:
+        engagements (List[Engagements]): The engagements to convert.
+
+    Returns:
+        torch.Tensor: The engagement tensors.
+    """
     engagements:torch.Tensor=torch.stack([torch.tensor(row,dtype=torch.float32) for row in engagements])
-    return posts,engagements
+    return engagements

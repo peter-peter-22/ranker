@@ -1,5 +1,4 @@
-from src.common.transform_data import transform_data
-import numpy as np
+from src.common.transform_data import transform_posts,transform_engagements
 import asyncio
 from src.common.fetch_data import training_data_fetcher
 import torch
@@ -25,15 +24,19 @@ async def train():
     init,get_data,close,validation_data = training_data_fetcher()
     await init()
 
-    # Get and prepare a fixed set of training data for validation
-    X_test,Y_test=transform_data(*(await validation_data()))
+    # Get a fixed set of training data for validation
+    X_test,Y_test=await validation_data()
+    # Prepare training data for the model
+    X_test=transform_posts(X_test)
+    Y_test=transform_engagements(Y_test)
 
     for epoch in range(epochs):
 
         # Process the batches of data
         async for X,Y in get_data():
-            # Prepare the training data for the mode
-            X,Y=transform_data(X,Y)
+            # Prepare the training data for the model
+            X=transform_posts(X)
+            Y=transform_engagements(Y)
             # Forward pass
             optimizer.zero_grad()
             outputs = model(X)
