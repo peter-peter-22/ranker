@@ -1,6 +1,9 @@
-def get_query():
+def get_query(base_table_selector:str):
     """
     Create a query to get all engaged posts with their historical data and engagement types.
+    
+    Args:
+	    base_table_selector (str): A part of the views table.
             
     Returns:
         str: The query string.
@@ -61,7 +64,7 @@ select
 		where clicks."userId"=view."userId" and clicks."postId"=view."postId"
 	) as liked
 -- Get the views
-from views view
+from ({base_table_selector}) view
 -- Add the interacted post
 inner join posts post on post.id=view."postId"
 -- Add the add the viewer user
@@ -101,5 +104,4 @@ left join lateral (
 	order by follow_snapshot."createdAt" desc
 	limit 1
 ) follow_snapshot on true
-offset $1 limit $2
     """

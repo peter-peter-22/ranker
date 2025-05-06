@@ -1,6 +1,7 @@
-from typing import NamedTuple
+from typing import NamedTuple, List
 import numpy as np
-from src.common.fetch_data import PostToRank
+from src.common.fetch_data import PostToRank,Engagements
+import torch
 
 class PostToRankNormalized(NamedTuple):
     """Normalized post data for the model."""
@@ -42,3 +43,18 @@ def transform_post(post:PostToRank):
         followed=post.followed,
         replied_by_followed=post.replied_by_followed,
     )
+
+def transform_data(posts:List[PostToRank],engagements:List[Engagements]):
+    """
+    Convert the training data to normalized tensors
+
+    Args:
+        posts (List[PostToRank]): The training data.
+        engagements (List[Engagements]): The engagement history.
+
+    Returns:
+        Tuple[torch.Tensor, torch.Tensor]: The normalized tensors.
+    """
+    posts:torch.Tensor=torch.stack([torch.tensor(transform_post(row),dtype=torch.float32) for row in posts])#TODO use float16
+    engagements:torch.Tensor=torch.stack([torch.tensor(row,dtype=torch.float32) for row in engagements])
+    return posts,engagements

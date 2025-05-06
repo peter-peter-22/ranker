@@ -1,11 +1,10 @@
 from src.common.db import get_pool
-from typing import NamedTuple
+from typing import NamedTuple, List
 from datetime import timedelta
 from src.common.query import get_query
 import math
 import asyncpg
 import random
-
 
 class PostToRank(NamedTuple):
     """
@@ -37,16 +36,28 @@ class Batch(NamedTuple):
     limit: int
     offset: int
 
-def create_data_stream():
+def training_data_fetcher():
+    """
+    Export functions to fetch training data in batches, and validation data.
+
+    Returns:
+        init: function to create database connection and batches
+        get_data: generator function to fetch training data in batches
+        close: function to close the database connection
+        get_validation_data: function to get a set of training data to validate
+
+    """
     batches:list[Batch]=None
     pool:asyncpg.Pool=None
     batch_size=10_000
+    validation_size=10_000
+    count:int=None
 
     # Create pool, count the rows and create batches
     async def init():
-        nonlocal batches,pool,batch_size
+        nonlocal batches,pool,batch_size,count
 
-        print("Preparing training data stream",flush=True)
+        print("Preparing training data fetcher",flush=True)
 
         # Count rows
         pool = await get_pool()
@@ -56,31 +67,45 @@ def create_data_stream():
         # Create batches
         batches=[Batch(batch_size,i*batch_size) for i in range(math.ceil(count/batch_size))]
         print(f"Created {len(batches)} batches",flush=True)
-        return batches
+
+    # Get validation data
+    async def validation_data():
+        nonlocal pool, count
+        
+        # Calculate how much percent of the table is the training data
+        percent=validation_size/count*100
+
+        print(f"Fetching the {percent:.4f}% of {count} rows for validation.",flush=True)
+
+        # Create query to fetch 
+        query=get_query(f"select * from views tablesample bernoulli({percent}) repeatable(100)")
+
+        # Fetch rows
+        rows=await pool.fetch(query)
+        print(f"Fetched {len(rows)} rows for validation.",flush=True)
+
+        # Return formatted rows
+        return format_rows(rows)
 
     # Generator function to return shuffled batches of data.
     async def get_data():
         nonlocal batches,pool
-
-        # Check if the initialization happened
-        if(batches==None or pool==None):
-            raise Exception("Data stream not initialized")
         
         # Shuffle the batches
         random.shuffle(batches)
+
+        # Create query
+        query=get_query("select * from views offset $1 limit $2")
 
         # Process each match
         for i,batch in enumerate(batches):
             print(f"Processing batch {i+1}/{len(batches)}",flush=True)
             # Get the rows
-            rows=await pool.fetch(get_query(),batch.offset,batch.limit)
+            rows=await pool.fetch(query,batch.offset,batch.limit)
             # Shuffle the rows
             random.shuffle(rows)
-            # Format the rows
-            posts=[PostToRank(*row[:10]) for row in rows]
-            engagements=[Engagements(*row[10:]) for row in rows]
-            # Return the results
-            yield posts,engagements
+            # Format and return the rows
+            yield format_rows(rows)
 
     # Close the pool
     async def close():
@@ -90,4 +115,20 @@ def create_data_stream():
             await pool.close()
         print("Datastream closed",flush=True)
 
-    return init,get_data,close
+    return init,get_data,close,validation_data
+
+def format_rows(rows:List):
+    """
+    Convert database rows into types.
+
+    Args:
+        rows (List): A list of database rows.
+
+    Returns:
+        posts (List[PostToRank]): A list of Post objects.
+        engagements (List[Engagements]): A list of Engagement objects.
+    """
+    # Format the rows
+    posts=[PostToRank(*row[:10]) for row in rows]
+    engagements=[Engagements(*row[10:]) for row in rows]
+    return posts,engagements
