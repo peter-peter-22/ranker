@@ -6,7 +6,8 @@ import torch
 from src.common.model import RankerModel
 from src.common.plot import display_plot
 from typing import List
-from src.common.model_store import save,load
+from src.common.model_store import save
+from src.common.plot import TrainingProgress
 
 async def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -18,8 +19,8 @@ async def train():
     criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
 
-    # Create live loss plotter
-    losses: List[float]=[]
+    # Track loss and accuracy
+    training_progress: List[TrainingProgress]=[]
 
     init,get_data,close,validation_data = training_data_fetcher()
     await init()
@@ -49,8 +50,8 @@ async def train():
             accuracy = (predicted == Y_test).float().mean()
             print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Accuracy: {accuracy.item():.4f}')
 
-        # Track the loss
-        losses.append(loss.item())
+        # Update training metrics
+        training_progress.append(TrainingProgress(loss.item(), accuracy.item()))
 
     # Close the connection
     await close()
@@ -58,6 +59,6 @@ async def train():
     save(model)
 
     # Display the plot
-    display_plot(losses)
+    display_plot(training_progress)
 
 asyncio.run(train())

@@ -50,7 +50,7 @@ def training_data_fetcher():
     batches:list[Batch]=None
     pool:asyncpg.Pool=None
     batch_size=10_000
-    validation_size=10_000
+    validation_size=20_000
     count:int=None
 
     # Create pool, count the rows and create batches
