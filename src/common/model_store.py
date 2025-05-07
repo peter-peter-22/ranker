@@ -1,7 +1,7 @@
 import torch
 from pathlib import Path
 from src.app import root_path
-from src.common.model import RankerModel
+from src.common.model import create_model, RankerModel
 
 model_path=(root_path / Path("model/model.pth")).resolve()
 
@@ -18,6 +18,6 @@ def load()->RankerModel:
        return cached_model
     
     print(f"Loading model from {model_path}")
-    cached_model=RankerModel()
+    cached_model=create_model()
     cached_model.load_state_dict(torch.load(model_path))
     return cached_model

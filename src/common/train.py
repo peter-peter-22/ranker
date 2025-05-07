@@ -1,19 +1,16 @@
 from src.common.transform_data import transform_posts,transform_engagements
 import asyncio
 from src.common.fetch_data import training_data_fetcher
-import torch
-from src.common.model import RankerModel
+from src.common.model import create_model
 from src.common.plot import display_plot
 from typing import List
 from src.common.model_store import save
 from src.common.plot import TrainingProgress
+import torch
 
 async def train():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Device: {device}")
-    model=RankerModel()
-    model = model.to(device)
-    epochs=20
+    model=create_model()
+    epochs=5
     learning_rate=0.01
     criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
@@ -34,20 +31,22 @@ async def train():
 
         # Process the batches of data
         async for X,Y in get_data():
+            print("Training")
             # Prepare the training data for the model
             X=transform_posts(X)
             Y=transform_engagements(Y)
             # Forward pass
             optimizer.zero_grad()
-            outputs = model(X)
+            outputs:torch.Tensor = model(X)
             loss:torch.Tensor = criterion(outputs, Y)
             # Backward pass and optimize
             loss.backward()
             optimizer.step()
+            print("Training complete")
 
         # Calculate and display accuracy
         with torch.no_grad():
-            outputs = model(X_test)
+            outputs:torch.Tensor = model(X_test)
             loss:torch.Tensor = criterion(outputs, Y_test)
             predicted = (outputs > 0.5).float()
             accuracy = (predicted == Y_test).float().mean()

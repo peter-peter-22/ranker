@@ -5,6 +5,7 @@ from src.common.query import get_query
 import math
 import asyncpg
 import random
+import asyncio
 
 class PostToRank(NamedTuple):
     """
@@ -49,8 +50,9 @@ def training_data_fetcher():
     """
     batches:list[Batch]=None
     pool:asyncpg.Pool=None
-    batch_size=10_000
-    validation_size=20_000
+    batch_size=100_000
+    validation_size=200_000
+    processes=2
     count:int=None
 
     # Create pool, count the rows and create batches
@@ -79,15 +81,34 @@ def training_data_fetcher():
         
         # Shuffle the batches
         random.shuffle(batches)
-
+        # Collect the indexes of the remaining batches
+        remaining_batches=list(range(len(batches)))
         # Create query
         query=get_query("select * from views offset $1 limit $2")
+        # Create task list
+        tasks:List[asyncio.Task[List]]=[]
 
-        # Process each match
-        for i,batch in enumerate(batches):
-            print(f"Processing batch {i+1}/{len(batches)}",flush=True)
-            # Get the rows
-            rows=await pool.fetch(query,batch.offset,batch.limit)
+        # Process each batch
+        while len(tasks) + len(remaining_batches) > 0:
+
+            # Create tasks to match the target pararrel process count
+            while len(tasks)<processes and len(remaining_batches)>0:
+                # Select the index of the first unprocessed batch
+                selected_batch_index=remaining_batches.pop(0)
+                print(f"Fetching batch {selected_batch_index+1}",flush=True)
+                # Select the first unprocessed batch
+                selected_batch=batches[selected_batch_index]
+                # Create a task to fetch the selected batch
+                tasks.append(asyncio.create_task(
+                    pool.fetch(query,selected_batch.offset,selected_batch.limit)
+                ))
+
+            # Get current batch number
+            batch_number=len(batches)-(len(remaining_batches)+len(tasks))+1
+            # Wait for the first task to finish
+            print(f"Waiting for batch {batch_number}/{len(batches)} to complete",flush=True)
+            rows=await tasks.pop(0)
+            print(f"Batch {batch_number}/{len(batches)} completed",flush=True)
             # Shuffle the rows
             random.shuffle(rows)
             # Format and return the rows

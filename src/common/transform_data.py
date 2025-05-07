@@ -2,6 +2,7 @@ from typing import NamedTuple, List
 import numpy as np
 from src.common.fetch_data import PostToRank,Engagements
 import torch
+from src.common.device import device
 
 class PostToRankNormalized(NamedTuple):
     """Normalized post data for the model."""
@@ -28,7 +29,7 @@ def normalize_post(post:PostToRank):
     """
     return PostToRankNormalized(
         # Convert to hours and normalize.
-        age=post.age.seconds/60/48,
+        age=post.age.seconds/60/60/48,
         # Embedding similarity.
         embedding_similarity=post.embedding_similarity,
         # Normalize engagement counts.
@@ -54,7 +55,7 @@ def transform_posts(posts:List[PostToRank]):
     Returns:
         torch.Tensor: Normalized post tensors.
     """
-    posts:torch.Tensor=torch.stack([torch.tensor(normalize_post(row),dtype=torch.float32) for row in posts])#TODO use float16
+    posts:torch.Tensor=torch.stack([torch.tensor(normalize_post(row),device=device,dtype=torch.float32) for row in posts])#TODO use float16
     return posts
 
 def transform_engagements(engagements:List[Engagements]):
@@ -67,5 +68,5 @@ def transform_engagements(engagements:List[Engagements]):
     Returns:
         torch.Tensor: The engagement tensors.
     """
-    engagements:torch.Tensor=torch.stack([torch.tensor(row,dtype=torch.float32) for row in engagements])
+    engagements:torch.Tensor=torch.stack([torch.tensor(row,device=device,dtype=torch.float32) for row in engagements])
     return engagements

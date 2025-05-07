@@ -1,4 +1,5 @@
 import torch.nn as nn
+from src.common.device import device
 
 class RankerModel(nn.Module):
     def __init__(self):
@@ -19,3 +20,9 @@ class RankerModel(nn.Module):
         
     def forward(self, x):
         return self.model(x)
+    
+def create_model():
+    """Create an empty model"""
+    model=RankerModel()
+    model=model.to(device)
+    return model
