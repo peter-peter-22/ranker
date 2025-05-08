@@ -11,7 +11,7 @@ def get_query(base_table_selector:str):
     return f"""
 select 
 	-- The age of the post when it was engaged
-	view."createdAt" - post."createdAt" as age,
+	extract(epoch from view."createdAt" - post."createdAt")/3600 as age,
 	-- Post engagement counts
 	coalesce(post_snapshot."likeCount",0) as engagement,
 	coalesce(post_snapshot."replyCount",0) as replies,

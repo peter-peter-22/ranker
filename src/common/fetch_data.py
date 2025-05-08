@@ -11,7 +11,7 @@ class PostToRank(NamedTuple):
     """
     All data for of a post that the model will process.
     """
-    age: timedelta    
+    age: float    
     like_count: int
     reply_count: int
     click_count: int

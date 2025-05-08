@@ -29,7 +29,7 @@ def normalize_post(post:PostToRank):
     """
     return PostToRankNormalized(
         # Convert to hours and normalize.
-        age=post.age.seconds/60/60/48,
+        age=post.age/48,
         # Embedding similarity.
         embedding_similarity=post.embedding_similarity,
         # Normalize engagement counts.
