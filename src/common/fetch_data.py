@@ -1,6 +1,5 @@
 from src.common.db import get_pool
 from typing import NamedTuple, List
-from datetime import timedelta
 from src.common.query import get_query
 import math
 import asyncpg
@@ -50,9 +49,9 @@ def training_data_fetcher():
     """
     batches:list[Batch]=None
     pool:asyncpg.Pool=None
-    batch_size=100_000
-    validation_size=200_000
-    processes=2
+    batch_size=50_000
+    validation_size=100_000
+    processes=3
     count:int=None
 
     # Create pool, count the rows and create batches
@@ -106,9 +105,9 @@ def training_data_fetcher():
             # Get current batch number
             batch_number=len(batches)-(len(remaining_batches)+len(tasks))+1
             # Wait for the first task to finish
-            print(f"Waiting for batch {batch_number}/{len(batches)} to complete",flush=True)
+            print(f"Waiting for batch {batch_number}/{len(batches)} to download",flush=True)
             rows=await tasks.pop(0)
-            print(f"Batch {batch_number}/{len(batches)} completed",flush=True)
+            print(f"Batch {batch_number}/{len(batches)} downloaded",flush=True)
             # Shuffle the rows
             random.shuffle(rows)
             # Format and return the rows

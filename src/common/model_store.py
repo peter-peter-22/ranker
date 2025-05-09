@@ -1,6 +1,6 @@
 import torch
 from pathlib import Path
-from src.app import root_path
+from src.config import root_path
 from src.common.model import create_model, RankerModel
 
 model_path=(root_path / Path("model/model.pth")).resolve()

@@ -7,17 +7,22 @@ from typing import List
 from src.common.model_store import save
 from src.common.plot import TrainingProgress
 import torch
+from src.model.early_stoppping import EarlyStopping
 
 async def train():
+
+    # Create model and define config
     model=create_model()
     epochs=5
-    learning_rate=0.01
+    learning_rate=0.02
     criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
+    early_stopper = EarlyStopping(patience=3, min_delta=0.001)
 
     # Track loss and accuracy
     training_progress: List[TrainingProgress]=[]
 
+    # Create training data streamer
     init,get_data,close,validation_data = training_data_fetcher()
     await init()
 
@@ -29,7 +34,7 @@ async def train():
 
     for epoch in range(epochs):
 
-        # Process the batches of data
+        # Train
         async for X,Y in get_data():
             print("Training")
             # Prepare the training data for the model
@@ -44,20 +49,25 @@ async def train():
             optimizer.step()
             print("Training complete")
 
-        # Calculate and display accuracy
+        # Evaluate
         with torch.no_grad():
             outputs:torch.Tensor = model(X_test)
             loss:torch.Tensor = criterion(outputs, Y_test)
-            predicted = (outputs > 0.5).float()
-            accuracy = (predicted == Y_test).float().mean()
-            print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Accuracy: {accuracy.item():.4f}')
-
+        predicted = (outputs > 0.5).float()
+        accuracy = (predicted == Y_test).float().mean()
+        print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}, Accuracy: {accuracy.item():.4f}')
         # Update training metrics
         training_progress.append(TrainingProgress(loss.item(), accuracy.item()))
+
+        # Early stopping
+        if early_stopper.step(accuracy):
+            print("Early stopping triggered.")
+            break
 
     # Close the connection
     await close()
 
+    # Save after the training is complete
     save(model)
 
     # Display the plot

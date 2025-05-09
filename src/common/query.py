@@ -1,4 +1,4 @@
-def get_query(base_table_selector:str):
+def get_query(base_table_selector:str):#TODO use embedding snapshots
     """
     Create a query to get all engaged posts with their historical data and engagement types.
     
@@ -17,7 +17,7 @@ select
 	coalesce(post_snapshot."replyCount",0) as replies,
 	coalesce(post_snapshot."clickCount",0) as clicks,
 	-- Embedding similarity between the user and the post
-	coalesce(1 - (post.embedding <=> users.embedding), 0)::real as cosine_similarity,
+	coalesce(1 - (post.embedding <=> embedding_snapshot.embedding), 0)::real as cosine_similarity,
 	-- Engagement history between the viewer and the poster
 	coalesce(history."likeCount",0) as like_history,
 	coalesce(history."replyCount",0) as reply_history,
@@ -104,4 +104,14 @@ left join lateral (
 	order by follow_snapshot."createdAt" desc
 	limit 1
 ) follow_snapshot on true
+-- Embedding vector snapshot
+left join lateral (
+	select * from user_embedding_snapshots embedding_snapshot
+	where 
+		embedding_snapshot."userId"=view."userId" 
+		and 
+		embedding_snapshot."createdAt"<view."createdAt"  
+	order by embedding_snapshot."createdAt" desc
+	limit 1
+) embedding_snapshot on true
     """

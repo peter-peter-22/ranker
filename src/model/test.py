@@ -58,7 +58,7 @@ def display(test_posts:List[TestPost]):
                 x.post.like_count,
                 x.post.reply_count,
                 x.post.click_count,
-                f"{x.post.age.seconds/60/60:.0f}",
+                f"{x.post.age:.0f}",
                 f"{x.post.embedding_similarity:.2f}",
                 x.post.like_history,
                 x.post.reply_history,
