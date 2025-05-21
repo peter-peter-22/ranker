@@ -1,2 +1,18 @@
-### 
-GET http://localhost:8002/train
+# Test the ranker with an empty post
+POST http://localhost:8002/rank HTTP/1.1
+content-type: application/json
+
+{
+    "posts":[{
+        "age": 0,  
+        "like_count": 0,
+        "reply_count": 0,
+        "click_count": 0,
+        "embedding_similarity": 0,
+        "like_history": 0,
+        "reply_history": 0,
+        "click_history": 0,
+        "followed": false,
+        "replied_by_followed": false
+    }]
+}
