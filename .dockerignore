@@ -1,9 +1,12 @@
 # Python-specific ignores
-__pycache__/
+__pycache__
 
 # Git
 .git
 .gitignore
+
+# Virtual environment
+.venv
 
 # Docker files (if they're in the same directory)
 docker-compose*.yml
