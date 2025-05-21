@@ -47,12 +47,12 @@ def training_data_fetcher():
         get_validation_data: function to get a set of training data to validate
 
     """
-    batches:list[Batch]=None
-    pool:asyncpg.Pool=None
+    batches:list[Batch]
+    pool:asyncpg.Pool
     batch_size=50_000
     validation_size=100_000
     processes=3
-    count:int=None
+    count:int
 
     # Create pool, count the rows and create batches
     async def init():

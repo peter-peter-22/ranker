@@ -4,6 +4,7 @@ from src.common.fetch_data import PostToRank
 from typing import List
 from src.model.predict import predict
 from src.model.score import engagement_score
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -15,4 +16,4 @@ class RankerModel(BaseModel):
 async def rank(body:RankerModel):
     predicted_engagements=predict(body.posts)
     scores=list(map(engagement_score,predicted_engagements))
-    return {"scores":scores,"predicted_engagements":predicted_engagements}
+    return JSONResponse({"scores":scores})

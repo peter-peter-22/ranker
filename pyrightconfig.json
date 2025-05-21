@@ -1,0 +1,9 @@
+{
+    // Ignore torchvision errors 
+    "reportUnknownVariableType": "none",
+    "reportUnknownArgumentType": "none",
+    "reportUnknownMemberType": "none",
+    "reportUnknownLambdaType": "none",
+    "reportUnknownDictionaryValueType": "none",
+    "reportAttributeAccessIssue": "none"
+}

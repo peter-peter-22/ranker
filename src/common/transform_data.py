@@ -55,8 +55,7 @@ def transform_posts(posts:List[PostToRank]):
     Returns:
         torch.Tensor: Normalized post tensors.
     """
-    posts:torch.Tensor=torch.stack([torch.tensor(normalize_post(row),device=device,dtype=torch.float32) for row in posts])#TODO use float16
-    return posts
+    return torch.stack([torch.tensor(normalize_post(row),device=device,dtype=torch.float32) for row in posts])#TODO use float16
 
 def transform_engagements(engagements:List[Engagements]):
     """
@@ -68,5 +67,4 @@ def transform_engagements(engagements:List[Engagements]):
     Returns:
         torch.Tensor: The engagement tensors.
     """
-    engagements:torch.Tensor=torch.stack([torch.tensor(row,device=device,dtype=torch.float32) for row in engagements])
-    return engagements
+    return torch.stack([torch.tensor(row,device=device,dtype=torch.float32) for row in engagements])

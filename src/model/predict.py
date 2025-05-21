@@ -3,7 +3,6 @@ from typing import List,NamedTuple
 from src.common.fetch_data import PostToRank
 from src.common.model_store import load
 from src.common.transform_data import transform_posts
-from src.common.fetch_data import Engagements
 
 class PredictedEngagements(NamedTuple):
     like_chance:float
@@ -14,10 +13,9 @@ def predict(posts:List[PostToRank]):
     # Get the model
     model=load()
     # Prepare posts for the model
-    posts=transform_posts(posts)
+    prepared_posts=transform_posts(posts)
     # Make predictions
     with torch.no_grad():
-        predictions:torch.Tensor=model(posts)
+        predictions:torch.Tensor=model(prepared_posts)
     # Convert to readable format
-    predictions:List[PredictedEngagements]=[PredictedEngagements(*row) for row in predictions.tolist()]
-    return predictions
+    return [PredictedEngagements(*row) for row in predictions.tolist()] # type: ignore
